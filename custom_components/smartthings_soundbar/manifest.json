@@ -4,9 +4,9 @@
   "codeowners": ["@PiotrMachowski", "@defnone", "@TheOddPirate"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "",
+  "documentation": "https://github.com/TheOddPirate/Smartthings_Soundbar",
   "iot_class": "cloud_polling",
-  "issue_tracker": "",
+  "issue_tracker": "https://github.com/TheOddPirate/Smartthings_Soundbar/issues",
   "requirements": [],
-  "version": "v0.0.0"
+  "version": "v0.0.1"
 }
