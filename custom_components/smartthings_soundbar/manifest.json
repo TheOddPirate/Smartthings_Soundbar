@@ -1,0 +1,12 @@
+{
+  "domain": "smartthings_soundbar",
+  "name": "SmartThings Soundbar",
+  "codeowners": ["@PiotrMachowski", "@defnone", "@TheOddPirate"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "",
+  "requirements": [],
+  "version": "v0.0.0"
+}
