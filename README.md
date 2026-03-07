@@ -19,6 +19,6 @@ source: HDMI2 , sbMode: "20"
 source: digital , sbMode: "10"
 source: wifi , sbMode: "25"
 and i will add support for your model asap.
-if im slow to respond send me a reminder on (discord)[https://discord.com/users/1270815586162708623]
+if im slow to respond send me a reminder on [discord](https://discord.com/users/1270815586162708623)
 
 
