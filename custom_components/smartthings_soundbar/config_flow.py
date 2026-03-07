@@ -11,7 +11,14 @@ from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_MAX_VOLUME, DEFAULT_MAX_VOLUME, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_MAX_VOLUME,
+    CONF_SOURCE_MAP,
+    DEFAULT_MAX_VOLUME,
+    DEFAULT_NAME,
+    DEFAULT_SOURCE_MAP,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +59,9 @@ class SmartThingsSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
 
+                # Add default source map to config
+                user_input[CONF_SOURCE_MAP] = DEFAULT_SOURCE_MAP.copy()
+
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,
@@ -68,6 +78,10 @@ class SmartThingsSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Generate a unique ID for the imported config
         await self.async_set_unique_id(f"{DOMAIN}_{import_config[CONF_DEVICE_ID]}")
         self._abort_if_unique_id_configured()
+
+        # Add default source map if not present
+        if CONF_SOURCE_MAP not in import_config:
+            import_config[CONF_SOURCE_MAP] = DEFAULT_SOURCE_MAP.copy()
 
         return self.async_create_entry(
             title=import_config.get(CONF_NAME, DEFAULT_NAME),

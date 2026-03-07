@@ -1,0 +1,50 @@
+{'main': {'mndt': {'value': '2021-01-01'
+        }, 'mnfv': {'value': 'HW-Q910AWWB-1011.1'
+        }, 'role': {'value': None
+        }, 'mnhw': {'value': ''
+        }, 'detailName': {'value': 'External Device'
+        }, 'data': {'value': None
+        }, 'di': {'value': '5e49e476-2c15-c608-4938-4d0a9e6dd2c5'
+        }, 'supportedPlaybackCommands': {'value': '[
+                "play",
+                "pause",
+                "stop"
+            ]'
+        }, 'channel': {'value': None
+        }, 'supportedInputSources': {'value': '[
+                "digital",
+                "HDMI1",
+                "bluetooth",
+                "HDMI2",
+                "wifi"
+            ]'
+        }, 'mnsl': {'value': ''
+        }, 'dmv': {'value': 'res.1.1.0,sh.1.1.0'
+        }, 'switch': {'value': 'on'
+        }, 'mode': {'value': '20'
+        }, 'vid': {'value': 'VD-NetworkAudio-002S'
+        }, 'mnpv': {'value': '5.5'
+        }, 'icv': {'value': 'core.1.1.0'
+        }, 'st': {'value': '2025-06-01T10: 28: 31Z'
+        }, 'updatedTime': {'value': None
+        }, 'totalTime': {'value': '0'
+        }, 'playbackStatus': {'value': 'stopped'
+        }, 'mute': {'value': 'unmuted'
+        }, 'n': {'value': 'Samsung Soundbar'
+        }, 'volume': {'value': '10', 'unit': '%'
+        }, 'mnmo': {'value': 'HW-Q910A'
+        }, 'mnmn': {'value': 'Samsung Electronics'
+        }, 'mnml': {'value': ''
+        }, 'mnos': {'value': 'Tizen'
+        }, 'pi': {'value': '5e49e476-2c15-c608-4938-4d0a9e6dd2c5'
+        }, 'inputSource': {'value': 'HDMI2'
+        }, 'status': {'value': None
+        }, 'audioTrackData': {'value': '{
+                "title": "",
+                "artist": "",
+                "album": ""
+            }'
+        }, 'elapsedTime': {'value': '0'
+        }
+    }
+}

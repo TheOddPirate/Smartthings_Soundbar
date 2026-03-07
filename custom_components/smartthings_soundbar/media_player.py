@@ -81,6 +81,8 @@ class SmartThingsSoundbarMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, name, api_key, device_id, max_volume):
         self._name = name
+        self._model = ""
+        self._sbMode = 0
         self._device_id = device_id
         self._api_key = api_key
         self._max_volume = max_volume
@@ -233,5 +235,11 @@ class SmartThingsSoundbarMediaPlayer(MediaPlayerEntity):
             attributes["media_artist"] = self._media_artist
         if self._media_album is not None:
             attributes["media_album"] = self._media_album
+        if self._model is not None:
+            attributes["soundbar_model"] = self._model
+        if self._sbMode is not None:
+            attributes["sbMode"] = self._sbMode
+            
+            
 
         return attributes

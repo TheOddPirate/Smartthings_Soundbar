@@ -2,6 +2,7 @@ import json
 import logging
 import requests
 from homeassistant.const import (STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
+from .const import DEFAULT_SOURCE_MAP
 
 API_BASEURL = "https://api.smartthings.com/v1"
 API_DEVICES = API_BASEURL + "/devices/"
@@ -44,6 +45,7 @@ class SoundbarApi:
                 entity._state = STATE_UNAVAILABLE
                 return
             data = resp.json()
+            logging.getLogger(__name__).warning("SoundbarApi JSON: %s", data)
         except requests.RequestException as ex:
             logging.getLogger(__name__).warning("SoundbarApi device_update network error: %s", ex)
             entity._state = STATE_UNAVAILABLE
@@ -57,8 +59,10 @@ class SoundbarApi:
         if switch_state is None:
             entity._state = STATE_UNAVAILABLE
             return
+        soundbar_model = SoundbarApi.extractor(data, "main.mnmo.value")
         playback_state = SoundbarApi.extractor(data, "main.playbackStatus.value")
         device_source = SoundbarApi.extractor(data, "main.inputSource.value")
+        device_mode = SoundbarApi.extractor(data, "main.mode.value")
         supported_sources_raw = SoundbarApi.extractor(data, "main.supportedInputSources.value")
         try:
             device_all_sources = json.loads(supported_sources_raw) if isinstance(supported_sources_raw, str) else supported_sources_raw
@@ -91,6 +95,9 @@ class SoundbarApi:
                 entity._state = STATE_ON
         else:
             entity._state = STATE_OFF
+        
+        entity._model = soundbar_model
+        entity._sbMode = device_mode
         entity._volume = device_volume
         try:
             entity._source_list = device_all_sources if isinstance(device_all_sources, list) else device_all_sources["value"]
@@ -106,7 +113,6 @@ class SoundbarApi:
                 entity._media_title = None
         except Exception:
             entity._media_title = None
-
         # Build media metadata
         media_title = None
         media_artist = None
@@ -230,14 +236,9 @@ class SoundbarApi:
                 # under attributes, as 
                 # main samsungvd.soundFrom mode 20
                 # for me, should probably make a check for device type and match found values
-                source_map = {
-                    "HDMI1": {"sbMode": 3, "connectionType": "HDMI 1"},
-                    "HDMI2": {"sbMode": 20, "connectionType": "HDMI 2"},
-                    "digital": {"sbMode": 10, "connectionType": "D-IN"},
-                    "wifi": {"sbMode": 25, "connectionType": "WIFI"},
-                }
+                source_map = DEFAULT_SOURCE_MAP
                 if argument not in source_map:
-                    logger.warning(f"Unknown source: {argument}")
+                    logger.getLogger(__name__).warning(f"Unknown source: {argument}")
                     raise ValueError(f"Unknown source: {argument}")
                 headers_json = {**REQUEST_HEADERS, "Content-Type": "application/json"}
                 execute_payload = {
