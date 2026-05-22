@@ -2,8 +2,10 @@ import json
 import logging
 import requests
 from homeassistant.const import (STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
-from .const import DEFAULT_SOURCE_MAP
+from .const import (DEFAULT_SOURCE_MAP, HW_S60T_SOURCE_MAP)
 
+SOURCE_MAP_TO_USE = DEFAULT_SOURCE_MAP
+SOUNDBAR_MODELNAME = "Default"
 API_BASEURL = "https://api.smartthings.com/v1"
 API_DEVICES = API_BASEURL + "/devices/"
 COMMAND_POWER_ON = "{'commands': [{'component': 'main','capability': 'switch','command': 'on'}]}"
@@ -60,6 +62,11 @@ class SoundbarApi:
             entity._state = STATE_UNAVAILABLE
             return
         soundbar_model = SoundbarApi.extractor(data, "main.mnmo.value")
+        if soundbar_mode == "HW-S60T":
+            SOURCE_MAP_TO_USE = HW_S60T_SOURCE_MAP
+        else:
+            SOURCE_MAP_TO_USE = DEFAULT_SOURCE_MAP
+
         playback_state = SoundbarApi.extractor(data, "main.playbackStatus.value")
         device_source = SoundbarApi.extractor(data, "main.inputSource.value")
         device_mode = SoundbarApi.extractor(data, "main.mode.value")
@@ -236,7 +243,7 @@ class SoundbarApi:
                 # under attributes, as 
                 # main samsungvd.soundFrom mode 20
                 # for me, should probably make a check for device type and match found values
-                source_map = DEFAULT_SOURCE_MAP
+                source_map = SOURCE_MAP_TO_USE
                 if argument not in source_map:
                     logger.getLogger(__name__).warning(f"Unknown source: {argument}")
                     raise ValueError(f"Unknown source: {argument}")

@@ -16,6 +16,13 @@ DEFAULT_SOURCE_MAP = {
     "wifi": {"sbMode": 25},
 }
 
+
+HW_S60T_SOURCE_MAP = {
+    "bluetooth": {"sbMode": 4},
+    "digital": {"sbMode": 1},
+    "wifi": {"sbMode": 26},
+}
+
 # Service constants
 SERVICE_ADD_SOURCE_MAPPING = "add_source_mapping"
 SERVICE_REMOVE_SOURCE_MAPPING = "remove_source_mapping"
