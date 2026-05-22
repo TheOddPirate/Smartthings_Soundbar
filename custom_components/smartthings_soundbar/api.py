@@ -62,7 +62,7 @@ class SoundbarApi:
             entity._state = STATE_UNAVAILABLE
             return
         soundbar_model = SoundbarApi.extractor(data, "main.mnmo.value")
-        if soundbar_mode == "HW-S60T":
+        if soundbar_model == "HW-S60T":
             SOURCE_MAP_TO_USE = HW_S60T_SOURCE_MAP
         else:
             SOURCE_MAP_TO_USE = DEFAULT_SOURCE_MAP
