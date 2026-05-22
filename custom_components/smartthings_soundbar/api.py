@@ -1,11 +1,16 @@
 import json
 import logging
 import requests
+import os
 from homeassistant.const import (STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE)
 from .const import (DEFAULT_SOURCE_MAP, HW_S60T_SOURCE_MAP)
 
 SOURCE_MAP_TO_USE = DEFAULT_SOURCE_MAP
-SOUNDBAR_MODELNAME = "Default"
+SOUNDBAR_MODELNAME = "default"
+
+CONFIG_DIR = os.path.dirname(__file__)
+MAPS_DIR = os.path.join(CONFIG_DIR, "source_maps")
+
 API_BASEURL = "https://api.smartthings.com/v1"
 API_DEVICES = API_BASEURL + "/devices/"
 COMMAND_POWER_ON = "{'commands': [{'component': 'main','capability': 'switch','command': 'on'}]}"
@@ -28,8 +33,89 @@ DEFAULT_SOUND_MODES = [
     "surround",
 ]
 
-
 class SoundbarApi:
+    @staticmethod
+    def get_source_map(model_name: str = "default") -> dict:
+        """Henter kildekart for en spesifikk modell med fallbacks."""
+        
+        # 1. Sørg for at mappen eksisterer (Fikset indentering her!)
+        if not os.path.exists(MAPS_DIR):
+            try:
+                os.makedirs(MAPS_DIR)
+            except Exception as e:
+                logging.getLogger(__name__).error("Could not create source maps directory. Error: %s\nFallback to default", e)
+                return {
+                    "HDMI1": {"sbMode": 3},
+                    "HDMI2": {"sbMode": 20},
+                    "digital": {"sbMode": 10},
+                    "wifi": {"sbMode": 25}
+                }
+
+        # Saniter modellnavnet (Fikset: fjernet {} rundt model_name)
+        safe_model_name = "".join(c for c in model_name if c.isalnum() or c in ("-", "_")).strip()
+        if not safe_model_name:
+            safe_model_name = "default"
+
+        model_file_path = os.path.join(MAPS_DIR, f"{safe_model_name}_source_map.json")
+        default_file_path = os.path.join(MAPS_DIR, "default_source_map.json")
+ 
+        # 2. Sjekk om det finnes en spesifikk fil for denne modellen
+        if os.path.exists(model_file_path):
+            try:
+                with open(model_file_path, "r") as f:
+                    return json.load(f)
+            except Exception as e:
+                logging.getLogger(__name__).error("Feil ved lesing av fil for %s: %s", safe_model_name, e)
+
+        # 3. Fallback: Hvis modell-filen ikke finnes, sjekk om default_source_map.json finnes
+        if os.path.exists(default_file_path):
+            try:
+                with open(default_file_path, "r") as f:
+                    return json.load(f)
+            except Exception as e:
+                logging.getLogger(__name__).error("Feil ved lesing av default_source_map.json: %s", e)
+
+        # 4. Siste skanse: Hvis ingenting finnes på disk, lag en default-fil
+        defaults = {
+            "HDMI1": {"sbMode": 3},
+            "HDMI2": {"sbMode": 20},
+            "digital": {"sbMode": 10},
+            "wifi": {"sbMode": 25}
+        }
+    
+        try:
+            with open(default_file_path, "w") as f:
+                json.dump(defaults, f, indent=4)
+        except Exception as e:
+            logging.getLogger(__name__).error("Kunne ikke skrive default-fil til disk: %s", e)
+
+        return defaults
+
+    @staticmethod
+    def save_source_map(model_name: str, source_map: dict):
+        """Lagrer et oppdatert kildekart for en spesifikk modell."""
+        if not model_name or model_name.lower() == "default":
+            return  # Ikke overskriv den globale defaulten under live-læring
+
+        safe_model_name = "".join(c for c in model_name if c.isalnum() or c in ("-", "_")).strip()
+        model_file_path = os.path.join(MAPS_DIR, f"{safe_model_name}_source_map.json")
+
+        try:
+            with open(model_file_path, "w") as f:
+                json.dump(source_map, f, indent=4)
+                logging.getLogger(__name__).info("💾 [SmartThings Soundbar] Lagret oppdatert kildekart for %s", safe_model_name)
+        except Exception as e:
+            logging.getLogger(__name__).error("Kunne ikke lagre kildekart for %s: %s", safe_model_name, e)
+    @staticmethod
+    def model_source_map_exists(model_name: str):
+        safe_model_name = "".join(c for c in model_name if c.isalnum() or c in ("-", "_")).strip()
+        if not safe_model_name:
+            safe_model_name = "default"
+
+        model_file_path = os.path.join(MAPS_DIR, f"{safe_model_name}_source_map.json")
+        if os.path.exists(model_file_path):
+            return True
+        return False
 
     @staticmethod
     def device_update(entity):
@@ -62,10 +148,6 @@ class SoundbarApi:
             entity._state = STATE_UNAVAILABLE
             return
         soundbar_model = SoundbarApi.extractor(data, "main.mnmo.value")
-        if soundbar_model == "HW-S60T":
-            SOURCE_MAP_TO_USE = HW_S60T_SOURCE_MAP
-        else:
-            SOURCE_MAP_TO_USE = DEFAULT_SOURCE_MAP
 
         playback_state = SoundbarApi.extractor(data, "main.playbackStatus.value")
         device_source = SoundbarApi.extractor(data, "main.inputSource.value")
@@ -110,6 +192,31 @@ class SoundbarApi:
             entity._source_list = device_all_sources if isinstance(device_all_sources, list) else device_all_sources["value"]
         except Exception:
             entity._source_list = []
+
+        #Start of self learning source map code
+        if device_source and device_mode:
+            if isinstance(device_source, str) and device_source.strip():
+                source_key = device_source
+                try:
+                    current_mode_int = int(device_mode)
+                except (ValueError, TypeError):
+                    current_mode_int = device_mode
+        
+                current_map = SoundbarApi.get_source_map(model_name=soundbar_model)
+                updated = False
+                if source_key not in current_map:
+                    current_map[source_key] = {"sbMode": current_mode_int}
+                    updated = True
+                    logging.getLogger(__name__).info("New channel learned, added %s  with sbMode %s", source_key, current_mode_int)
+                elif current_map[source_key].get("sbMode") != current_mode_int:
+                    current_map[source_key]["sbMode"] = current_mode_int
+                    updated = True
+                    logging.getLogger(__name__).info("sbMode mistake fixed for %s! Updated from %s to %s", source_key, current_map[source_key].get("sbMode"), current_mode_int)
+                #TODO re add this if
+                if updated or not SoundbarApi.model_source_map_exists(soundbar_model):
+                    SoundbarApi.save_source_map(model_name=soundbar_model, source_map=current_map)
+
+        #ENd of self learning source map code
         entity._muted = device_muted
         entity._source = device_source
         entity._sound_from = device_sound_from if device_sound_from is not None else entity._sound_from
@@ -243,10 +350,10 @@ class SoundbarApi:
                 # under attributes, as 
                 # main samsungvd.soundFrom mode 20
                 # for me, should probably make a check for device type and match found values
-                source_map = SOURCE_MAP_TO_USE
+                source_map = SoundbarApi.get_source_map(entity._model)
                 if argument not in source_map:
-                    logger.getLogger(__name__).warning(f"Unknown source: {argument}")
-                    raise ValueError(f"Unknown source: {argument}")
+                    logging.getLogger(__name__).warning(f"Unknown source: {argument}\nDoes not match source_map: {source_map}")
+                    return
                 headers_json = {**REQUEST_HEADERS, "Content-Type": "application/json"}
                 execute_payload = {
                     "commands": [

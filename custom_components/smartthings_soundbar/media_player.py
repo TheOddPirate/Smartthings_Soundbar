@@ -81,7 +81,7 @@ class SmartThingsSoundbarMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, name, api_key, device_id, max_volume):
         self._name = name
-        self._model = ""
+        self._model = "default"
         self._sbMode = 0
         self._device_id = device_id
         self._api_key = api_key
