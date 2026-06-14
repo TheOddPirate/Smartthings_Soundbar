@@ -1,4 +1,5 @@
 # Smartthings Soundbar
+Updated with self learning source algoritm, if it does not work originally, use the remote to switch source, wait X sec, change again, wait, and just continue to every source and it should work perfectly from there
 
 This is a fork from 
 https://github.com/defnone/Home-Assistant-custom-components-SmartThings-Soundbar
